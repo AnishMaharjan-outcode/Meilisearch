@@ -1,0 +1,28 @@
+node_modules/
+meili_data/
+
+# Environment files
+.env
+.env.local
+
+# Logs
+*.log
+webhook.log
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+*.lock
+
+# IDE and Editor settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS files
+.DS_Store
+Thumbs.db

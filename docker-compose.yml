@@ -1,0 +1,12 @@
+services:
+  meilisearch:
+    image: getmeili/meilisearch:v1.48.3
+    container_name: foamorder-meilisearch
+    restart: unless-stopped
+    ports:
+      - "${MEILI_PORT}:7700"
+    environment:
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
+      - MEILI_ENV=${MEILI_ENV}
+    volumes:
+      - ./meili_data:/meili_data
