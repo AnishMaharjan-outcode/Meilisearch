@@ -8,12 +8,6 @@ if (!BC_STORE_HASH || !BC_ACCESS_TOKEN) {
     console.error('❌ Missing BigCommerce credentials in env files.');
 }
 
-const bcHeaders = {
-    'X-Auth-Token': BC_ACCESS_TOKEN,
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-};
-
 // Simple in-memory cache for brands and categories
 let cachedBrands = null;
 let cachedBrandsExpiry = 0;

@@ -11,7 +11,6 @@ A production integration service designed to synchronize product catalog changes
 * **Weekly Automated Cron Sync**: Runs automatically every **Saturday at 1:00 AM US Eastern Time** (Richmond, VA timezone) via an integrated cron scheduler with shared concurrency locking.
 * **Atomic Index Swapping**: Full catalog syncs build in an isolated temporary index (`product_index_tmp`) and atomically swap with `product_index` in milliseconds—zero downtime for storefront search.
 * **Full System Checkup API (`GET /health/checkup`)**: Diagnostic endpoint testing Meilisearch Cloud connectivity, BigCommerce credentials, and environment configurations.
-* **Secure API Key Provisioning (`GET /meili/key`)**: Serves a scoped read-only (search-only) key to frontend clients, keeping your master Meilisearch key private.
 * **Optimized & Resilient**: Automatic rate-limit handling with exponential backoff on BigCommerce API, 5-minute in-memory caching for categories and brands, and URL sanitization.
 * **Render & Cloud-Native**: Streamlined Node.js runtime setup without local Docker dependencies.
 
@@ -149,7 +148,6 @@ curl https://your-service.onrender.com/webhook/registered \
 | **GET** | `/webhook/registered` | Yes (`X-Webhook-Token`) | Lists all currently active webhooks on your BigCommerce store. |
 | **GET** | `/meili/stats` | No | Returns document counts and database stats from Meilisearch Cloud. |
 | **GET** | `/webhook/logs` | No | Downloads the `webhook.log` trace file. |
-| **GET** | `/logs` | No | Shortcut alias to download `webhook.log`. |
 
 ---
 
@@ -165,7 +163,7 @@ curl https://your-service.onrender.com/webhook/registered \
 │   │   └── webhook.js           # /webhook receiver, registration & logs endpoints
 │   ├── services/
 │   │   ├── bigcommerce.js       # BigCommerce API client, rate limiter & cache
-│   │   ├── meilisearch.js       # Meilisearch Cloud fetch client & key generator
+│   │   ├── meilisearch.js       # Meilisearch Cloud HTTP fetch client
 │   │   ├── logger.js            # Safe file and console logger
 │   │   ├── scheduler.js         # Weekly full catalog cron runner
 │   │   ├── sync.js              # Full catalog re-indexing engine & product transformer

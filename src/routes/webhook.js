@@ -1,12 +1,11 @@
 import express from 'express';
 import { fetchProduct, fetchBrands, fetchCategories } from '../services/bigcommerce.js';
 import { meiliFetch } from '../services/meilisearch.js';
-import { transformProduct, buildCategoryPaths } from '../services/sync.js';
+import { transformProduct, buildCategoryPaths, INDEX_NAME } from '../services/sync.js';
 import { registerAllWebhooks, fetchExistingWebhooks } from '../services/webhooks.js';
 import { log, logSpacer, getLogFilePath, logExists } from '../services/logger.js';
 
 const router = express.Router();
-const INDEX_NAME = 'product_index';
 
 // Middleware to validate secure webhook token
 const validateWebhookToken = (req, res, next) => {
