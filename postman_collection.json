@@ -1,0 +1,226 @@
+{
+  "info": {
+    "_postman_id": "7f8b9e6a-5432-411a-9fbc-meilisearch-sync",
+    "name": "BigCommerce to Meilisearch Sync Service",
+    "description": "Postman collection for testing, managing, and monitoring the BigCommerce to Meilisearch Cloud integration on Render.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://meilisearch-s094.onrender.com",
+      "type": "string",
+      "description": "Base URL of the service (Render or localhost:4000)"
+    },
+    {
+      "key": "webhookToken",
+      "value": "6gmRYDCtEwE1Xx1Kf1WTd8zkaJXeqyaJ",
+      "type": "string",
+      "description": "Secret token configured in WEBHOOK_AUTH_TOKEN"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health & Diagnostics",
+      "item": [
+        {
+          "name": "Fast Health Check (Ping)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Lightweight health probe used by Render deployment and load balancers."
+          },
+          "response": []
+        },
+        {
+          "name": "Full System Checkup (Diagnostics)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health/checkup",
+              "host": ["{{baseUrl}}"],
+              "path": ["health", "checkup"]
+            },
+            "description": "Actively verifies connections to Meilisearch Cloud, BigCommerce API, and environment variables."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Catalog Sync",
+      "item": [
+        {
+          "name": "Trigger Full Catalog Sync",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Webhook-Token",
+                "value": "{{webhookToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/sync",
+              "host": ["{{baseUrl}}"],
+              "path": ["sync"]
+            },
+            "description": "Triggers zero-downtime atomic catalog reindexing from BigCommerce to Meilisearch Cloud in the background."
+          },
+          "response": []
+        },
+        {
+          "name": "Check Sync Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sync/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["sync", "status"]
+            },
+            "description": "Returns the status of catalog sync (idle, running, completed, or failed) and execution timestamps."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Webhooks Management",
+      "item": [
+        {
+          "name": "Register Webhooks with BigCommerce",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Webhook-Token",
+                "value": "{{webhookToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination\": \"{{baseUrl}}/webhook\",\n  \"scopes\": [\n    \"store/product/created\",\n    \"store/product/updated\",\n    \"store/product/deleted\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhook/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["webhook", "register"]
+            },
+            "description": "Registers store/product/created, store/product/updated, and store/product/deleted webhooks targeting this service."
+          },
+          "response": []
+        },
+        {
+          "name": "List Registered BigCommerce Webhooks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Webhook-Token",
+                "value": "{{webhookToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/webhook/registered",
+              "host": ["{{baseUrl}}"],
+              "path": ["webhook", "registered"]
+            },
+            "description": "Lists all currently active webhooks registered on your BigCommerce store."
+          },
+          "response": []
+        },
+        {
+          "name": "Simulate Inbound Webhook Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Webhook-Token",
+                "value": "{{webhookToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scope\": \"store/product/updated\",\n  \"store_id\": \"1000000\",\n  \"data\": {\n    \"type\": \"product\",\n    \"id\": 111\n  },\n  \"hash\": \"test_hash\",\n  \"created_at\": 1783684365,\n  \"producer\": \"stores/e60ozbczpl\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhook",
+              "host": ["{{baseUrl}}"],
+              "path": ["webhook"]
+            },
+            "description": "Simulates an inbound BigCommerce webhook event for testing incremental product sync."
+          },
+          "response": []
+        },
+        {
+          "name": "Download Webhook Execution Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/webhook/logs",
+              "host": ["{{baseUrl}}"],
+              "path": ["webhook", "logs"]
+            },
+            "description": "Downloads the local webhook execution log file."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Meilisearch Info",
+      "item": [
+        {
+          "name": "Get Search-Only Key",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/meili/key",
+              "host": ["{{baseUrl}}"],
+              "path": ["meili", "key"]
+            },
+            "description": "Returns a search-only key scoped for frontend store searching."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Meilisearch Database Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/meili/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["meili", "stats"]
+            },
+            "description": "Fetches indexed document counts and stats directly from Meilisearch Cloud."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

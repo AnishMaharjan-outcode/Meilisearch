@@ -159,6 +159,8 @@ router.post('/register', validateWebhookToken, async (req, res) => {
     isRegisteringWebhooks = true;
     try {
         let destination = req.body?.destination;
+        let scopes = req.body?.scopes;
+
         if (!destination) {
             const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
             const host = req.get('host');
@@ -166,7 +168,7 @@ router.post('/register', validateWebhookToken, async (req, res) => {
         }
 
         log(`Registering webhooks with destination: ${destination}`, 'WEBHOOK-REG');
-        const results = await registerAllWebhooks(destination);
+        const results = await registerAllWebhooks(destination, scopes);
         res.json({ destination, results });
     } catch (err) {
         res.status(500).json({ error: err.message });

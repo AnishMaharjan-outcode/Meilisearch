@@ -55,16 +55,26 @@ async function registerWebhook(destinationUrl, scope) {
     return data.data;
 }
 
-export async function registerAllWebhooks(destinationUrl) {
+export const DEFAULT_SCOPES = [
+    'store/product/created',
+    'store/product/updated',
+    'store/product/deleted'
+];
+
+export async function registerAllWebhooks(destinationUrl, customScopes = null) {
     if (!destinationUrl) {
         throw new Error('Destination URL is required to register webhooks.');
     }
+
+    const scopesToRegister = (Array.isArray(customScopes) && customScopes.length > 0)
+        ? customScopes
+        : DEFAULT_SCOPES;
 
     const cleanDest = destinationUrl.replace(/\/+$/, '');
     const existingWebhooks = await fetchExistingWebhooks();
     const results = [];
 
-    for (const scope of scopes) {
+    for (const scope of scopesToRegister) {
         const duplicate = existingWebhooks.find(h => 
             h.scope === scope && (h.destination || '').replace(/\/+$/, '') === cleanDest
         );
