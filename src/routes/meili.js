@@ -1,57 +1,7 @@
 import express from 'express';
-import { getOrCreateSearchOnlyKey, meiliFetch } from '../services/meilisearch.js';
+import { meiliFetch } from '../services/meilisearch.js';
 
 const router = express.Router();
-
-// Simple memory cache for IP-to-Timezone mapping
-const ipTzCache = new Map();
-
-/**
- * Resolves the client's timezone based on their public IP address
- */
-async function getTimezoneFromIp(ip) {
-    if (!ip || ip === '127.0.0.1' || ip === '::1' || ip === 'localhost') {
-        // Local system default fallback
-        return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-    }
-    
-    if (ipTzCache.has(ip)) {
-        return ipTzCache.get(ip);
-    }
-    
-    try {
-        const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,timezone`);
-        if (response.ok) {
-            const data = await response.json();
-            if (data && data.status === 'success' && data.timezone) {
-                ipTzCache.set(ip, data.timezone);
-                return data.timezone;
-            }
-        }
-    } catch (e) {
-        // Silently fail and fall back to UTC
-    }
-    return 'UTC';
-}
-
-// GET /meili/key - Get or create search-only key
-router.get('/key', async (req, res) => {
-    try {
-        const { key, created } = await getOrCreateSearchOnlyKey();
-        res.json({
-            created,
-            message: created ? 'New search-only key created.' : 'Existing search-only key returned.',
-            key: key.key,
-            uid: key.uid,
-            description: key.description,
-            actions: key.actions,
-            indexes: key.indexes
-        });
-    } catch (err) {
-        console.error('Error getting/creating Meilisearch key:', err);
-        res.status(500).json({ error: err.message });
-    }
-});
 
 // GET /meili/stats - Get Meilisearch database statistics
 router.get('/stats', async (req, res) => {

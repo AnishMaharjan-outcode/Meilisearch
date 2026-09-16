@@ -193,20 +193,6 @@
       "name": "4. Meilisearch Info",
       "item": [
         {
-          "name": "Get Search-Only Key",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/meili/key",
-              "host": ["{{baseUrl}}"],
-              "path": ["meili", "key"]
-            },
-            "description": "Returns a search-only key scoped for frontend store searching."
-          },
-          "response": []
-        },
-        {
           "name": "Get Meilisearch Database Stats",
           "request": {
             "method": "GET",

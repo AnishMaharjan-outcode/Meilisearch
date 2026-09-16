@@ -147,7 +147,6 @@ curl https://your-service.onrender.com/webhook/registered \
 | **POST** | `/webhook` | Yes (`X-Webhook-Token`) | Receives real-time product updates from BigCommerce. |
 | **POST** | `/webhook/register` | Yes (`X-Webhook-Token`) | Registers product webhooks (`created`, `updated`, `deleted`) with BigCommerce. |
 | **GET** | `/webhook/registered` | Yes (`X-Webhook-Token`) | Lists all currently active webhooks on your BigCommerce store. |
-| **GET** | `/meili/key` | No | Fetches a search-only key (optional fallback; can also be copied from Cloud dashboard). |
 | **GET** | `/meili/stats` | No | Returns document counts and database stats from Meilisearch Cloud. |
 | **GET** | `/webhook/logs` | No | Downloads the `webhook.log` trace file. |
 | **GET** | `/logs` | No | Shortcut alias to download `webhook.log`. |
@@ -161,7 +160,7 @@ curl https://your-service.onrender.com/webhook/registered \
 │   ├── routes/
 │   │   ├── index.js             # Central routing tree
 │   │   ├── health.js            # /health & /health/checkup diagnostic endpoints
-│   │   ├── meili.js             # /meili/key & /meili/stats endpoints
+│   │   ├── meili.js             # /meili/stats endpoint
 │   │   ├── sync.js              # /sync trigger & status API
 │   │   └── webhook.js           # /webhook receiver, registration & logs endpoints
 │   ├── services/
