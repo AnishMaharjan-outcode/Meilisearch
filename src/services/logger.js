@@ -16,14 +16,22 @@ export function log(message, context = '') {
     
     const formatted = `[${timestamp}] ${prefix}${message}`;
     console.log(`${prefix}${message}`);
-    fs.appendFileSync(LOG_FILE_PATH, formatted + '\n', 'utf8');
+    try {
+        fs.appendFileSync(LOG_FILE_PATH, formatted + '\n', 'utf8');
+    } catch (err) {
+        // Fallback gracefully without crashing if disk is read-only or unavailable
+    }
 }
 
 /**
  * Appends a single newline to segment runs
  */
 export function logSpacer() {
-    fs.appendFileSync(LOG_FILE_PATH, '\n', 'utf8');
+    try {
+        fs.appendFileSync(LOG_FILE_PATH, '\n', 'utf8');
+    } catch (err) {
+        // Safe ignore on restricted file systems
+    }
 }
 
 /**

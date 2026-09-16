@@ -1,14 +1,11 @@
-/**
- * index-products-from-bc.mjs
- * Indexes products directly from BigCommerce into your new Meilisearch instance.
- * Re-run this script whenever you update products in BigCommerce.
- */
 import dotenv from 'dotenv';
-import { meiliFetch } from '../services/meilisearch.js';
-import { bcGetAll } from '../services/bigcommerce.js';
-import { log as fileLog, logSpacer } from '../services/logger.js';
+import { meiliFetch } from './meilisearch.js';
+import { bcGetAll } from './bigcommerce.js';
+import { log as fileLog, logSpacer } from './logger.js';
 
-let currentContext = 'CLI-SYNC';
+dotenv.config({ path: ['.env.local', '.env'] });
+
+let currentContext = 'SYNC-SERVICE';
 
 const console = {
     log: (message, ...args) => {
@@ -27,23 +24,8 @@ const console = {
     }
 };
 
-dotenv.config({ path: ['.env.local', '.env'] });
-
-const BC_STORE_HASH = process.env.BIGCOMMERCE_STORE_HASH;
-const BC_ACCESS_TOKEN = process.env.BIGCOMMERCE_ACCESS_TOKEN;
-const MEILI_HOST = process.env.MEILISEARCH_URL || process.env.NEXT_PUBLIC_MEILISEARCH_URL;
-const MEILI_MASTER_KEY = process.env.MEILI_MASTER_KEY;
-const INDEX_NAME = 'product_index';
-const TEMP_INDEX_NAME = 'product_index_tmp';
-
-if (!BC_STORE_HASH || !BC_ACCESS_TOKEN || !MEILI_HOST || !MEILI_MASTER_KEY) {
-    console.error('❌ Missing required environment variables in env files:');
-    console.error('   BIGCOMMERCE_STORE_HASH:', BC_STORE_HASH ? '✅' : '❌ MISSING');
-    console.error('   BIGCOMMERCE_ACCESS_TOKEN:', BC_ACCESS_TOKEN ? '✅' : '❌ MISSING');
-    console.error('   MEILISEARCH_URL / NEXT_PUBLIC_MEILISEARCH_URL:', MEILI_HOST ? '✅' : '❌ MISSING');
-    console.error('   MEILI_MASTER_KEY:', MEILI_MASTER_KEY ? '✅' : '❌ MISSING');
-    process.exit(1);
-}
+export const INDEX_NAME = 'product_index';
+export const TEMP_INDEX_NAME = 'product_index_tmp';
 
 async function waitForTask(taskUid) {
     while (true) {
@@ -57,7 +39,7 @@ async function waitForTask(taskUid) {
 }
 
 // Build category tree mappings
-function buildCategoryPaths(categories) {
+export function buildCategoryPaths(categories) {
     const catMap = Object.fromEntries(categories.map(c => [c.id, c]));
 
     const getPath = (catId) => {
@@ -78,7 +60,7 @@ function buildCategoryPaths(categories) {
 }
 
 // Transform BC product to Optimum7 Meilisearch document schema
-function transformProduct(product, brandMap, catPaths) {
+export function transformProduct(product, brandMap, catPaths) {
     const variants = product.variants || [];
 
     // Extract images
@@ -243,7 +225,7 @@ function transformProduct(product, brandMap, catPaths) {
     return doc;
 }
 
-async function configureIndex() {
+export async function configureIndex() {
     console.log('⚙️ Creating and configuring Meilisearch index settings...');
 
     // 1. Ensure the live index exists (required for swapping on first run)
@@ -323,8 +305,18 @@ async function configureIndex() {
     }
 }
 
-async function main(context = 'CLI-SYNC') {
+export async function runCatalogSync(context = 'CATALOG-SYNC') {
     currentContext = context;
+
+    const BC_STORE_HASH = process.env.BIGCOMMERCE_STORE_HASH;
+    const BC_ACCESS_TOKEN = process.env.BIGCOMMERCE_ACCESS_TOKEN;
+    const MEILI_HOST = process.env.MEILISEARCH_URL || process.env.NEXT_PUBLIC_MEILISEARCH_URL;
+    const MEILI_MASTER_KEY = process.env.MEILI_MASTER_KEY;
+
+    if (!BC_STORE_HASH || !BC_ACCESS_TOKEN || !MEILI_HOST || !MEILI_MASTER_KEY) {
+        throw new Error('Missing required environment variables (BIGCOMMERCE_STORE_HASH, BIGCOMMERCE_ACCESS_TOKEN, MEILISEARCH_URL, MEILI_MASTER_KEY).');
+    }
+
     console.log('🚀 Starting BigCommerce Product Indexer ...');
 
     try {
@@ -382,7 +374,7 @@ async function main(context = 'CLI-SYNC') {
         console.error('❌ Reindexing failed midway:', error.message);
         throw error;
     } finally {
-        // Clean up the temporary index (which now has the old index's data or incomplete state)
+        // Clean up the temporary index
         console.log('🧹 Cleaning up temporary index...');
         try {
             const cleanTask = await meiliFetch(`/indexes/${TEMP_INDEX_NAME}`, 'DELETE');
@@ -405,10 +397,12 @@ async function main(context = 'CLI-SYNC') {
     }
 }
 
-if (process.argv[1] && (process.argv[1].endsWith('sync.js') || process.argv[1].includes('sync'))) {
-    main().catch(error => {
+// Support for CLI execution if run directly: node src/services/sync.js
+if (process.argv[1] && process.argv[1].endsWith('sync.js')) {
+    runCatalogSync('CLI-SYNC').catch(error => {
         console.error('❌ Fatal Indexer Error:', error);
         process.exit(1);
     });
 }
-export { transformProduct, buildCategoryPaths, main }; // For imports
+
+export { runCatalogSync as main };

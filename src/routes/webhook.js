@@ -1,7 +1,8 @@
 import express from 'express';
 import { fetchProduct, fetchBrands, fetchCategories } from '../services/bigcommerce.js';
 import { meiliFetch } from '../services/meilisearch.js';
-import { transformProduct, buildCategoryPaths } from '../scripts/sync.js';
+import { transformProduct, buildCategoryPaths } from '../services/sync.js';
+import { registerAllWebhooks, fetchExistingWebhooks } from '../services/webhooks.js';
 import { log, logSpacer, getLogFilePath, logExists } from '../services/logger.js';
 
 const router = express.Router();
@@ -132,6 +133,46 @@ router.get('/logs', (req, res) => {
             }
         }
     });
+});
+
+// GET /webhook/registered - List currently active BigCommerce webhooks
+router.get('/registered', validateWebhookToken, async (req, res) => {
+    try {
+        const hooks = await fetchExistingWebhooks();
+        res.json({ total: hooks.length, webhooks: hooks });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+let isRegisteringWebhooks = false;
+
+// POST /webhook/register - Register product webhooks with BigCommerce
+router.post('/register', validateWebhookToken, async (req, res) => {
+    if (isRegisteringWebhooks) {
+        return res.status(409).json({
+            error: 'Conflict',
+            message: 'Webhook registration is already in progress. Please wait a moment.'
+        });
+    }
+
+    isRegisteringWebhooks = true;
+    try {
+        let destination = req.body?.destination;
+        if (!destination) {
+            const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+            const host = req.get('host');
+            destination = `${protocol}://${host}/webhook`;
+        }
+
+        log(`Registering webhooks with destination: ${destination}`, 'WEBHOOK-REG');
+        const results = await registerAllWebhooks(destination);
+        res.json({ destination, results });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    } finally {
+        isRegisteringWebhooks = false;
+    }
 });
 
 export default router;

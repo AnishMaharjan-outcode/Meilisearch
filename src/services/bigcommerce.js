@@ -25,8 +25,16 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 async function bcGet(path, retries = 3, delay = 1000) {
     try {
-        const res = await fetch(`https://api.bigcommerce.com/stores/${BC_STORE_HASH}/v3${path}`, {
-            headers: bcHeaders
+        const storeHash = process.env.BIGCOMMERCE_STORE_HASH || BC_STORE_HASH;
+        const accessToken = process.env.BIGCOMMERCE_ACCESS_TOKEN || BC_ACCESS_TOKEN;
+        const headers = {
+            'X-Auth-Token': accessToken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        };
+
+        const res = await fetch(`https://api.bigcommerce.com/stores/${storeHash}/v3${path}`, {
+            headers
         });
         if (!res.ok) {
             if (res.status === 429 && retries > 0) {
@@ -94,3 +102,11 @@ export async function fetchCategories() {
     cachedCategoriesExpiry = now + CACHE_TTL;
     return categories;
 }
+
+export async function checkBigCommerceHealth() {
+    return bcGet('/catalog/summary');
+}
+
+export { bcGet };
+
+

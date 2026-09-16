@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { main as runSync } from '../scripts/sync.js';
+import { executeCatalogSync } from '../routes/sync.js';
 import { log } from './logger.js';
 
 export function startScheduler() {
@@ -10,10 +10,9 @@ export function startScheduler() {
     cron.schedule('0 1 * * 6', async () => {
         log('⏰ Starting scheduled weekly full catalog sync...', 'CRON-SYNC');
         try {
-            await runSync('CRON-SYNC');
-            log('✅ Scheduled full catalog sync completed successfully.', 'CRON-SYNC');
+            await executeCatalogSync('CRON-SYNC');
         } catch (error) {
-            log(`❌ Scheduled full catalog sync failed: ${error.message}`, 'CRON-SYNC');
+            log(`⚠️ Scheduled full catalog sync could not run: ${error.message}`, 'CRON-SYNC');
         }
     }, {
         scheduled: true,
